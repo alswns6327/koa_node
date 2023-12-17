@@ -12,7 +12,7 @@ const posts = [
 POST /api/posts
 {title, body}
 */
-exports.write = (ctx) => {
+export const write = (ctx) => {
   // REST API의 Request Body는 ctx.request.body에서 조회할 수 있습니다.
   const { title, body } = ctx.request.body;
   postId++;
@@ -25,14 +25,14 @@ exports.write = (ctx) => {
 /* Post Search
 GET /api/posts
 */
-exports.list = (ctx) => {
+export const list = (ctx) => {
   ctx.body = posts;
 };
 
 /* 특정 포스트 조회
 GET /api/posts/:id
 */
-exports.read = (ctx) => {
+export const read = (ctx) => {
   const { id } = ctx.params;
   // id 갑으로 글 조회
   const post = posts.find((p) => p.id.toString() === id);
@@ -50,7 +50,7 @@ exports.read = (ctx) => {
 /* delete post
 DELETE /api/posts/:id
 */
-exports.remove = (ctx) => {
+export const remove = (ctx) => {
   const { id } = ctx.params;
   const index = posts.findIndex((p) => p.id.toString() === id);
   console.log(id);
@@ -70,7 +70,7 @@ exports.remove = (ctx) => {
 PUT /api/posts/:id
 {title, body}
 */
-exports.replace = (ctx) => {
+export const replace = (ctx) => {
   // PUT 메서드는 전체 포스트 정보를 입력하여 데이터를 통쨰로 교체할 때 사용
   const { id } = ctx.params;
   const index = posts.findIndex((p) => p.id.toString() === id);
@@ -93,7 +93,7 @@ exports.replace = (ctx) => {
 PATCH /api/posts/:id
 {title?, body?}
 */
-exports.update = (ctx) => {
+export const update = (ctx) => {
   const { id } = ctx.params;
   const index = posts.findIndex((p) => p.id.toString() === id);
   if (index === -1) {

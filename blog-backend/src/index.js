@@ -1,20 +1,5 @@
-const koa = require('koa');
-const Router = require('koa-router');
-const bodyParser = require('koa-bodyparser');
+// no-global-assign ESLint 옵션 비활성화
+/* eslint-disable no-global-assign */
 
-const api = require('./api');
-
-const app = new koa();
-
-const router = new Router();
-
-router.use('/api', api.routes());
-
-// 라우터 적용 전에 bodyParser 적용
-app.use(bodyParser());
-
-app.use(router.routes()).use(router.allowedMethods());
-
-app.listen(4000, () => {
-  console.log('Listening to port 4000');
-});
+require = require('esm')(module /*, options */);
+module.exports = require('./main.js');
