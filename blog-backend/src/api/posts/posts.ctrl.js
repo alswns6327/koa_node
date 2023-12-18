@@ -1,14 +1,16 @@
 import Post from '../../models/post';
+import mongoose from 'mongoose';
 
-let postId = 1; // id의 초기값
+const { ObjectId } = mongoose.Types;
 
-const posts = [
-  {
-    id: 1,
-    title: 'title',
-    body: 'body',
-  },
-];
+export const checkObjectId = (ctx, next) => {
+  const { id } = ctx.params;
+  if (!ObjectId.isValid(id)) {
+    ctx.status = 400; // Bad Request
+    return;
+  }
+  return next();
+};
 
 /* post write
 POST /api/posts
