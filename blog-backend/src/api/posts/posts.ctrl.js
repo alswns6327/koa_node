@@ -54,9 +54,30 @@ export const write = async (ctx) => {
 GET /api/posts
 */
 export const list = async (ctx) => {
+  const page = parseInt(ctx.query.page || '1', 10) - 1;
+
+  if (page < 0) {
+    ctx.status = 400;
+    return;
+  }
+
   try {
-    const posts = await Post.find().exec(); // exec() : 서버에 쿼리 요청을 하기 위해서 붙여줘야하는 함수
-    ctx.body = posts;
+    const posts = await Post.find()
+      .sort({ _id: -1 })
+      .skip(page * 10)
+      .limit(10)
+      .lean()
+      .exec(); // exec() : 서버에 쿼리 요청을 하기 위해서 붙여줘야하는 함수
+    const postCount = await Post.countDocuments().exec();
+    ctx.set('Last-Page', Math.ceil(postCount / 10));
+
+    ctx.body = posts
+      // .map((post) => post.toJSON()) lean() 함수로 조회를 하지 않으면 toJSON을 통해서 mongoose document를 JSON 형식으로 바꿔줘야 함
+      .map((post) => ({
+        ...post,
+        body:
+          post.body.length < 200 ? post.body : `${post.body.slice(0, 200)}...`,
+      }));
   } catch (e) {
     ctx.throw(500, e);
   }
