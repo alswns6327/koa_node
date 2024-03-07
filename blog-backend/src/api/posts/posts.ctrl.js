@@ -1,8 +1,33 @@
 import Post from '../../models/post';
 import mongoose from 'mongoose';
 import Joi from 'joi';
+import sanitizeHtml from 'sanitize-html';
 
 const { ObjectId } = mongoose.Types;
+
+const sanitizeOptions = {
+  allowedTags: [
+    'h1',
+    'h2',
+    'b',
+    'i',
+    'u',
+    's',
+    'p',
+    'ul',
+    'ol',
+    'li',
+    'blockquote',
+    'a',
+    'img',
+  ],
+  allowedAttributes: {
+    a: ['href', 'name', 'target'],
+    img: ['src'],
+    li: ['class'],
+  },
+  allowedSchemes: ['data', 'http'],
+};
 
 export const getPostById = async (ctx, next) => {
   const { id } = ctx.params;
@@ -58,7 +83,7 @@ export const write = async (ctx) => {
   const { title, body, tags } = ctx.request.body;
   const post = new Post({
     title,
-    body,
+    body: sanitizeHtml(body, sanitizeOptions),
     tags,
     user: ctx.state.user,
   });
@@ -68,6 +93,13 @@ export const write = async (ctx) => {
   } catch (e) {
     ctx.throw(500, e);
   }
+};
+
+const removeHtmlAndShorten = (body) => {
+  const filtered = sanitizeHtml(body, {
+    allowedTags: [],
+  });
+  return filtered.length < 200 ? filtered : `${filtered.slice(0, 200)}...`;
 };
 
 /* Post Search
@@ -102,8 +134,7 @@ export const list = async (ctx) => {
       // .map((post) => post.toJSON()) lean() 함수로 조회를 하지 않으면 toJSON을 통해서 mongoose document를 JSON 형식으로 바꿔줘야 함
       .map((post) => ({
         ...post,
-        body:
-          post.body.length < 200 ? post.body : `${post.body.slice(0, 200)}...`,
+        body: removeHtmlAndShorten(post.body),
       }));
   } catch (e) {
     ctx.throw(500, e);
@@ -149,8 +180,14 @@ export const update = async (ctx) => {
   }
 
   const { id } = ctx.params;
+
+  const nextData = { ...ctx.request.body };
+  if (nextData.body) {
+    nextData.body = sanitizeHtml(nextData.body, sanitizeOptions);
+  }
+
   try {
-    const post = await Post.findByIdAndUpdate(id, ctx.request.body, {
+    const post = await Post.findByIdAndUpdate(id, nextData, {
       new: true, // 업데이트 된 값을 반환, false인 경우 업데이트 이전 값을 반환
     }).exec();
     if (!post) {
